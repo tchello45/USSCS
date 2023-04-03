@@ -30,7 +30,7 @@ if os.path.exists("config.json"):
     del f
 
 else:
-    max_users = 2
+    max_users = 9000
     rsa_key_size = 512
 """
 Username: min 3, no spaces, no special characters
