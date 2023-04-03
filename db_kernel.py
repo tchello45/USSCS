@@ -1,3 +1,15 @@
+#############################################
+# USSCS - Universal Server Side Chat System #
+# Version: 0.1.0                            #
+# Author: Tilman Kurmayer                   #
+# License: only with permission from author #
+#                                           #       
+# Info: This file contains the database     #
+# This file contains the database kernel    #
+# for the USSCS                             #
+#                                           #
+# LAYER 1                                   #
+#############################################           
 import hashlib
 import rsa
 from Cryptodome.Cipher import AES
@@ -9,8 +21,8 @@ from datetime import datetime
 import pyotp
 import qrcode
 import json
-if os.path.exists("cyat.json"):
-    with open("cyat.json", "r") as f:
+if os.path.exists("config.json"):
+    with open("config.json", "r") as f:
         config = json.load(f)
         max_users = config["max_users"]
         rsa_key_size = config["rsa_key_size"]
