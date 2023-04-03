@@ -1,2 +1,1 @@
-# USSCS
-Python Serverside chat system
+# Universal Serverside Chat System
