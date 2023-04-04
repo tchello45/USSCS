@@ -1,7 +1,7 @@
 # Universal Serverside Chat System
 Developed by Tilman Kurmayer
 
-#Construction:
+# Construction:
 | Name: | Layer: | File: | Version: | Beta: | Description: |
 |-------|--------|-------|----------|-------|--------------|
 |  `db_kernel` | 1 | [db_kernel.ipynb](db_kernel.ipynb) | 0.1.0 | Yes | sqlite3 kernel to store messages and users |
