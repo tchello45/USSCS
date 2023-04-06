@@ -35,7 +35,6 @@ else:
 """
 Username: min 3, no spaces, no special characters
 privacy: 0 for public, 1 only contacts everbody can see me
-only manage and user should be used from external files
 """
 
 def fill_password(password:bytes) -> bytes:
