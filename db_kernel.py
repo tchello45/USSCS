@@ -132,6 +132,7 @@ class main_db:
         """
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         return self.c.fetchone() is not None
+
 class user_db:
     def __init__(self, server_id:str) -> None:
         """
@@ -373,7 +374,7 @@ class manage:
         server_id = id_generators.user_server_id(username)
         self.main_db.add_user(username, server_id)
         if twofa:
-            key = user_db(server_id).add_user(username, password, is_2fa_enabled=twofa) # TODO That's not logical. You generate the 2fa key and don't use it. In the user_db() you generate a new 2fa key. You should use the same key, because the one key is only for the qrcode and the other in the database.
+            key = user_db(server_id).add_user(username, password, is_2fa_enabled=twofa)
             #generate the qr code
             uri = pyotp.totp.TOTP(key).provisioning_uri(username, issuer_name="Cyat")
             img = qrcode.make(uri)
@@ -419,6 +420,8 @@ class manage:
         Returns the list of contacts
         """
         return user_db(self.main_db.get_user_server_id(username)).get_contacts(username)
+    
+
 class user:
     def __init__(self, username:str, password:str, twofa_code=None):
         """
@@ -454,7 +457,7 @@ class user:
         totp = pyotp.TOTP(self.twofa_key)
         return totp.verify(code)
         
-    def send_message(self, target:str, message:str):
+    def send_message(self, target:str, message:str, message_type:str):
         """
         target: Username of the target
         message: Message to be sent
@@ -463,7 +466,7 @@ class user:
         privacy level 1: Only contacts can send messages
         """
         direct = direct_db(id_generators.direct_server_id(self.username, target))
-        direct.send_message(self.username, target, message)
+        direct.send_message(self.username, target, message, message_type)
     def get_conversation(self, target:str, id:int=-1) -> list:
         """
         target: Username of the target
@@ -513,4 +516,8 @@ class user:
         """
         self.user_db.remove_contact(self.username, contact)
         self.contacts.remove(contact)
-        
+    def get_unread_messages(self) -> list:
+        """
+        Returns a list of users with unread messages
+        """
+        return self.user_db.get_unread(self.username)

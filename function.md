@@ -6,6 +6,7 @@
 # User (with login)
     send message
     get message
+    get unread
 
     add contact
     remove contact
