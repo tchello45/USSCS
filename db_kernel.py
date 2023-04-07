@@ -12,8 +12,6 @@
 #############################################           
 import hashlib
 import rsa
-from Cryptodome.Cipher import AES
-from Cryptodome.Util.Padding import pad, unpad
 import os
 import sqlite3
 import secrets
@@ -21,6 +19,7 @@ from datetime import datetime
 import pyotp
 import qrcode
 import json
+from encpp import encpp
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:
         config = json.load(f)
@@ -36,37 +35,6 @@ else:
 Username: min 3, no spaces, no special characters
 privacy: 0 for public, 1 only contacts everbody can see me
 """
-
-def fill_password(password:bytes) -> bytes:
-    return password + b" " * (32 - len(password))
-
-class encpp:
-    class aes:
-        def __init__(self, key:bytes) -> None:
-            self.key = fill_password(key)
-        # Encrypts data
-        def encrypt(self, data:bytes)-> bytes:
-            cipher = AES.new(self.key, AES.MODE_CBC)
-            ct_bytes = cipher.encrypt(pad(data, AES.block_size))
-            iv = cipher.iv
-            return iv + ct_bytes
-        # Decrypts data
-        def decrypt(self, data:bytes)-> bytes:
-            iv = data[:AES.block_size]
-            cipher = AES.new(self.key, AES.MODE_CBC, iv)
-            pt = unpad(cipher.decrypt(data[AES.block_size:]), AES.block_size)
-            return pt
-    class rsa:
-        @staticmethod
-        def encrypt(public_key:rsa.PublicKey, data:bytes) -> bytes:
-            aes_key = os.urandom(32)
-            enc = encpp.aes(aes_key).encrypt(data)
-            return rsa.encrypt(aes_key, public_key) + "sep".encode() + enc
-        @staticmethod
-        def decrypt(private_key:rsa.PrivateKey, data:bytes) -> bytes:
-            aes_key, enc = data.split("sep".encode())
-            aes_key = rsa.decrypt(aes_key, private_key)
-            return encpp.aes(aes_key).decrypt(enc)
 
 class id_generators:
     @staticmethod
