@@ -85,7 +85,7 @@ class main_db:
         username: Username of the user
         Returns the server_id of the user server
         """
-        #check if the user exists
+        
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
@@ -98,6 +98,20 @@ class main_db:
         """
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         return self.c.fetchone() is not None
+    def delete_user(self, username:str):
+        """
+        username: Username of the user
+        Deletes a user from the main database
+        Important: This method does not delete the user server
+        """
+        self.c.execute("DELETE FROM users WHERE username=?", (username,))
+        self.conn.commit()
+    def get_all_users(self):
+        """
+        Returns a list of all users
+        """
+        self.c.execute("SELECT * FROM users")
+        return self.c.fetchall()
 
 class user_db:
     def __init__(self, server_id:str) -> None:
@@ -118,13 +132,16 @@ class user_db:
         public_key = public_key.save_pkcs1().decode()
         private_key = encpp.aes(password.encode()).encrypt(private_key.save_pkcs1())
         if is_2fa_enabled:
-            twofa_key = pyotp.random_base32(length=128) # Normally 32, but 128 is better
+            twofa_key = pyotp.random_base32(length=128)
         else:
             twofa_key = None
         self.c.execute("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (username, public_key, private_key, password_hash, salt, privacy, is_2fa_enabled, twofa_key))
         self.conn.commit()
         if is_2fa_enabled:
             return twofa_key
+    def delete_user(self, username:str):
+        self.c.execute("DELETE FROM users WHERE username=?", (username,))
+        self.conn.commit()
     def get_2fa(self, username:str) -> tuple:
         self.c.execute("SELECT is_2fa_enabled, twofa_key FROM users WHERE username=?", (username,))
         is_2fa_enabled = self.c.fetchone()[0]
@@ -137,21 +154,18 @@ class user_db:
         self.c.execute("SELECT COUNT(*) FROM users")
         return self.c.fetchone()[0]
     def get_user(self, username:str):
-        #check if the user exists
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         user = self.c.fetchone()
         if user is None:
             raise ValueError("User does not exist")
         return user
     def get_user_public_key(self, username:str) -> rsa.PublicKey:
-        #check if the user exists
         self.c.execute("SELECT public_key FROM users WHERE username=?", (username,))
         public_key = self.c.fetchone()
         if public_key is None:
             raise ValueError("User does not exist")
         return rsa.PublicKey.load_pkcs1(public_key[0].encode())
     def get_user_private_key(self, username:str, password:str) -> rsa.PrivateKey:
-        #check if the user exists
         self.c.execute("SELECT private_key, salt FROM users WHERE username=?", (username,))
         private_key, salt = self.c.fetchone()
         if private_key is None:
@@ -159,28 +173,25 @@ class user_db:
         private_key = encpp.aes(password.encode()).decrypt(private_key)
         return rsa.PrivateKey.load_pkcs1(private_key)
     def get_user_privacy(self, username:str) -> int:
-        #check if the user exists
         self.c.execute("SELECT privacy FROM users WHERE username=?", (username,))
         privacy = self.c.fetchone()
         if privacy is None:
             raise ValueError("User does not exist")
         return privacy[0]
     def set_user_privacy(self, username:str, privacy:int) -> None:
-        #check if the user exists
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
         self.c.execute("UPDATE users SET privacy=? WHERE username=?", (privacy, username))
         self.conn.commit()
     def get_contacts(self, username:str) -> list:
-        #check if the user exists
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
         self.c.execute("SELECT contact FROM contacts WHERE username=?", (username,))
         return [i[0] for i in self.c.fetchall()]
     def add_contact(self, username:str, contact:str) -> None:
-        #check if the user exists
+        
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
@@ -191,7 +202,6 @@ class user_db:
         self.c.execute("INSERT INTO contacts VALUES (?, ?)", (username, contact))
         self.conn.commit()
     def remove_contact(self, username:str, contact:str) -> None:
-        #check if the user exists
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
@@ -202,50 +212,48 @@ class user_db:
         self.c.execute("DELETE FROM contacts WHERE username=? AND contact=?", (username, contact))
         self.conn.commit()
     def add_unread(self, username:str, sender:str):
-        #check if the user exists
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
         self.c.execute("INSERT INTO unread VALUES (?, ?)", (username, sender))
         self.conn.commit()
-    def set_read(self, username:str, sender:str):
-        #check if the user exists
+    def set_read(self, username:str, sender:str): 
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
         self.c.execute("DELETE FROM unread WHERE username=? AND sender=?", (username, sender))
         self.conn.commit()
     def get_unread(self, username:str) -> list:
-        #check if the user exists
+        
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
         self.c.execute("SELECT sender FROM unread WHERE username=?", (username,))
         return [i[0] for i in self.c.fetchall()]
     def enable_2fa(self, username:str, password:str):
-        #check if the user exists
+        
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
         #check if 2fa is already enabled
-        self.c.execute("SELECT * FROM users WHERE username=? AND two_factor_auth=?", (username, 1))
-        if self.c.fetchone() is not None:
+        self.c.execute("SELECT * FROM users WHERE username=? AND is_2fa_enabled=?", (username, 1))
+        if self.c.fetchone():
             raise ValueError("2FA is already enabled")
-        #generate a secret
-        two_fa_key = pyotp.random_base32(length=128)
-        self.conn.execute("UPDATE users SET two_factor_auth=?, two_factor_auth_key=? WHERE username=?", (1, two_fa_key, username))
+        twofa_key = pyotp.random_base32(length=128)
+        self.conn.execute("UPDATE users SET twofa_key = ?, is_2fa_enabled = ? WHERE username=?", (twofa_key, 1, username))
         self.conn.commit()
-        return two_fa_key
+        return twofa_key
+
     def disable_2fa(self, username:str, password:str):
-        #check if the user exists
+        
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
             raise ValueError("User does not exist")
         #check if 2fa is already disabled
-        self.c.execute("SELECT * FROM users WHERE username=? AND two_factor_auth=?", (username, 0))
+        self.c.execute("SELECT * FROM users WHERE username=? AND is_2fa_enabled=?", (username, 0))
         if self.c.fetchone() is not None:
             raise ValueError("2FA is already disabled")
-        self.conn.execute("UPDATE users SET two_factor_auth=?, two_factor_auth_key=? WHERE username=?", (0, "", username))
+        self.conn.execute("UPDATE users SET is_2fa_enabled = ? WHERE username=?", (0, username))
         self.conn.commit()
 class direct_db:
     def __init__(self, server_id:str) -> None:
@@ -329,7 +337,7 @@ class manage:
         """
         self.main_db = main_db(main_db_path)
     
-    def add_user(self, username:str, password:str, public_key:rsa.PublicKey, private_key:rsa.PrivateKey, twofa:bool=False) -> qrcode.make or None:
+    def add_user(self, username:str, password:str, public_key:rsa.PublicKey, private_key:rsa.PrivateKey, privacy:int=0, twofa:bool=False) -> qrcode.make or None:
         """
         username: Username of the user
         password: Password of the user
@@ -341,13 +349,13 @@ class manage:
         server_id = id_generators.user_server_id(username)
         self.main_db.add_user(username, server_id)
         if twofa:
-            key = user_db(server_id).add_user(username, password, public_key, private_key, twofa=twofa)
+            key = user_db(server_id).add_user(username, password, public_key, private_key, privacy=privacy, is_2fa_enabled=twofa)
             #generate the qr code
             uri = pyotp.totp.TOTP(key).provisioning_uri(username, issuer_name="Cyat")
             img = qrcode.make(uri)
             return img
         else:
-            user_db(server_id).add_user(username, password, public_key, private_key)
+            user_db(server_id).add_user(username, password, public_key, private_key, privacy=privacy)
     def get_user(self, username:str) -> tuple:
         """
         username: Username of the user
@@ -387,6 +395,11 @@ class manage:
         Returns the list of contacts
         """
         return user_db(self.main_db.get_user_server_id(username)).get_contacts(username)
+    def get_all_users(self) -> list:
+        """
+        Returns a list of all the users
+        """
+        return self.main_db.get_all_users()
     
 
 class user:
@@ -488,3 +501,9 @@ class user:
         Returns a list of users with unread messages
         """
         return self.user_db.get_unread(self.username)
+    def delete_account(self):
+        """
+        Deletes the account
+        """
+        self.user_db.delete_user(self.username, self.password)
+        self.main_db.delete_user(self.username)

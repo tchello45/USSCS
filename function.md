@@ -13,8 +13,11 @@
     get contacts
 
     set privacy
+    get privacy
 
-    set 2fa 
+    enable 2fa
+    disable 2fa
+    get 2fa
 
     delete account
 
