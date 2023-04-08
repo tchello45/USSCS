@@ -24,13 +24,11 @@ if os.path.exists("config.json"):
     with open("config.json", "r") as f:
         config = json.load(f)
         max_users = config["max_users"]
-        rsa_key_size = config["rsa_key_size"]
     del config
     del f
 
 else:
     max_users = 9000
-    rsa_key_size = 512
 """
 Username: min 3, no spaces, no special characters
 privacy: 0 for public, 1 only contacts everbody can see me
@@ -114,10 +112,9 @@ class user_db:
         self.c.execute("CREATE TABLE IF NOT EXISTS contacts (username TEXT, contact TEXT)")
         self.c.execute("CREATE TABLE IF NOT EXISTS unread (username TEXT, sender TEXT)")
         self.conn.commit()
-    def add_user(self, username:str, password:str, privacy:int=0, is_2fa_enabled:bool=False):
+    def add_user(self, username:str, password:str, public_key:rsa.PublicKey, private_key:rsa.PrivateKey,  privacy:int=0, is_2fa_enabled:bool=False):
         salt = secrets.token_hex(16)
         password_hash = hashlib.sha3_512(password.encode() + salt.encode()).hexdigest()
-        public_key, private_key = rsa.newkeys(rsa_key_size)
         public_key = public_key.save_pkcs1().decode()
         private_key = encpp.aes(password.encode()).encrypt(private_key.save_pkcs1())
         if is_2fa_enabled:
@@ -332,23 +329,25 @@ class manage:
         """
         self.main_db = main_db(main_db_path)
     
-    def add_user(self, username:str, password:str, twofa:bool=False) -> qrcode.make or None:
+    def add_user(self, username:str, password:str, public_key:rsa.PublicKey, private_key:rsa.PrivateKey, twofa:bool=False) -> qrcode.make or None:
         """
         username: Username of the user
         password: Password of the user
+        public_key: Public key of the user
+        private_key: Private key of the user
         Adds a user to the database
         if twofa is True it will return a qrcode image
         """
         server_id = id_generators.user_server_id(username)
         self.main_db.add_user(username, server_id)
         if twofa:
-            key = user_db(server_id).add_user(username, password, is_2fa_enabled=twofa)
+            key = user_db(server_id).add_user(username, password, public_key, private_key, twofa=twofa)
             #generate the qr code
             uri = pyotp.totp.TOTP(key).provisioning_uri(username, issuer_name="Cyat")
             img = qrcode.make(uri)
             return img
         else:
-            user_db(server_id).add_user(username, password)
+            user_db(server_id).add_user(username, password, public_key, private_key)
     def get_user(self, username:str) -> tuple:
         """
         username: Username of the user
