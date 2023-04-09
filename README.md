@@ -9,4 +9,4 @@ Developed by Tilman Kurmayer
 
 
 # In combination with:
-`encpp` - encryption library for Python [encpp](encpp.py) 
+`encpp` - encryption library for Python [encpp](https://github.com/tchello45/encpp) 
