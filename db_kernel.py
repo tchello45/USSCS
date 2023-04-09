@@ -19,7 +19,7 @@ from datetime import datetime
 import pyotp
 import qrcode
 import json
-from encpp import encpp
+from encpp.encpp import *
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:
         config = json.load(f)
