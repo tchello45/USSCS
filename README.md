@@ -4,8 +4,10 @@ Developed by Tilman Kurmayer
 # Construction:
 | Name: | Layer: | File: | Version: | Beta: | Description: |
 |-------|--------|-------|----------|-------|--------------|
-|  `db_kernel` | 1 | [db_kernel.ipynb](db_kernel.ipynb) | 0.1.0 | Yes | sqlite3 kernel to store messages and users |
-| `db_api` | 2 | [db_api.ipynb](db_api.ipynb) | no release | no release | API for db_kernel|
+|  `db_kernel` | 1 | [db_kernel.py](db_kernel.py) | 0.1.0 | Yes | sqlite3 kernel to store messages and users |
+| `db_api` | 2 | [db_api.py](db_api.py) | 0.1.0 | Yes | API for db_kernel|
+| `usscs_api` | 3 | [usscs_api.py](usscs_api.py) | 0.1.0 | Yes | API for usscs_kernel LAST LAYER |
+
 
 
 # In combination with:
