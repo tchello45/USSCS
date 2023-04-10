@@ -21,6 +21,8 @@
 
     delete account
 
+    change password
+
     get all users
     
 

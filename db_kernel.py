@@ -1,15 +1,3 @@
-#############################################
-# USSCS - Universal Server Side Chat System #
-# Version: 0.1.0                            #
-# Author: Tilman Kurmayer                   #
-# License: only with permission from author #
-#                                           #       
-# Info: This file contains the database     #
-# This file contains the database kernel    #
-# for the USSCS                             #
-#                                           #
-# LAYER 1                                   #
-#############################################           
 import hashlib
 import rsa
 import os
@@ -20,6 +8,21 @@ import pyotp
 import qrcode
 import json
 from encpp.encpp import *
+"""
+USSCS - Universal Server Side Chat System
+Version: 0.1.0 beta                        
+Author: Tilman Kurmayer                  
+License: only with permission from author
+                                               
+Info: This file contains the database    
+This file contains the database kernel   
+for the USSCS                            
+                                        
+LAYER 1                                        
+"""   
+__version__ = '0.1.0 beta'
+__author__ = 'Tilman Kurmayer'
+__license__ = 'only with permission from author'
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:
         config = json.load(f)
@@ -255,6 +258,26 @@ class user_db:
             raise ValueError("2FA is already disabled")
         self.conn.execute("UPDATE users SET is_2fa_enabled = ? WHERE username=?", (0, username))
         self.conn.commit()
+    def change_password(self, username:str, password:str, new_password:str):
+        """
+        username: Username of the user
+        password: Password of the user
+        new_password: New password of the user
+        Changes the password of the user
+        """
+        #check if the user exists
+        if not main_db().exists(username):
+            raise ValueError("User does not exist")
+        #check if the password is correct
+        salt, hash_ = self.conn.execute("SELECT salt, password_hash FROM users WHERE username=?", (username,)).fetchone()
+        if not hashlib.sha3_512(password.encode() + salt.encode()).hexdigest() == hash_:
+            raise ValueError("Password is incorrect")
+        #change the password
+        private_key = manage().get_user_private_key(username, password)
+        enc_private_key = encpp.aes(new_password.encode()).encrypt(private_key.save_pkcs1())
+        self.conn.execute("UPDATE users SET password_hash = ?, private_key = ? WHERE username=?", (hashlib.sha3_512(new_password.encode() + salt.encode()).hexdigest(), enc_private_key, username))
+        self.conn.commit()
+
 class direct_db:
     def __init__(self, server_id:str) -> None:
         """
@@ -507,3 +530,10 @@ class user:
         """
         self.user_db.delete_user(self.username, self.password)
         self.main_db.delete_user(self.username)
+    def change_password(self, new_password:str):
+        """
+        new_password: New password
+        Changes the password
+        """
+        self.user_db.change_password(self.username, self.password, new_password)
+        self.password = new_password
