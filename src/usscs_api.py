@@ -3,7 +3,7 @@ import db_api as usscs
 import json
 """
 USSCS - Universal Server Side Chat System 
-Version: 0.1.0 beta                             
+Version: 0.1.1 beta                             
 Author: Tilman Kurmayer                   
 License: only with permission from author 
 
@@ -39,8 +39,6 @@ The default user functions from usscs are:
 LAYER 3 and last LAYER
 """
 
-__version__ = '0.1.0 beta'
-__author__ = 'Tilman Kurmayer'
 
 
 #Here you have to add the most code yourself! You can add more information to the user and give the function more arguments.
