@@ -4,7 +4,7 @@ import qrcode
 import rsa
 """
 USSCS - Universal Server Side Chat System 
-Version: 0.1.1 beta                           
+Version: 0.1.2 beta                           
 Author: Tilman Kurmayer                   
 License: only with permission from author 
                                                  
@@ -29,7 +29,7 @@ class user:
         self._user = user_kernel(username, passwort, twofa_key)
         self._manage = manage()
     
-    def send_message(self, target:str, message:bytes, type:str='text'):
+    def send_message(self, target:str, message:str, type:str='text'):
         """
         Send a message to a user.
         """

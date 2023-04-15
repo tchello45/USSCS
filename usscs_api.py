@@ -3,7 +3,7 @@ import db_api as usscs
 import json
 """
 USSCS - Universal Server Side Chat System 
-Version: 0.1.1 beta                             
+Version: 0.1.2 beta                             
 Author: Tilman Kurmayer                   
 License: only with permission from author 
 

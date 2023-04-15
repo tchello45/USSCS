@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 0.1.1 beta                  
+Version: 0.1.2 beta                  
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -20,8 +20,6 @@ for the USSCS
                                         
 LAYER 1  
 """
-__author__ = "Tilman Kurmayer"
-__version__ = "0.1.1 beta"
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:
         config = json.load(f)
@@ -288,7 +286,7 @@ class direct_db:
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS messages (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, enc_for_sender BLOB, enc_for_receiver BLOB, timestamp TEXT, is_read BOOL, message_type TEXT)")
         self.conn.commit()
-    def send_message(self, username:str, target:str, message:bytes, type:str="text"):    
+    def send_message(self, username:str, target:str, message:str, type:str="text"):    
         """
         username: Username of the sender
         target: Username of the receiver
@@ -306,8 +304,8 @@ class direct_db:
             pass
         #send the message
         public_key = manage().get_user_public_key(username)
-        enc_for_sender = encpp.rsa().encrypt(public_key, message)
-        enc_for_receiver = encpp.rsa().encrypt(manage().get_user_public_key(target), message)
+        enc_for_sender = encpp.rsa().encrypt(public_key, message.encode())
+        enc_for_receiver = encpp.rsa().encrypt(manage().get_user_public_key(target), message.encode())
         self.c.execute("INSERT INTO messages VALUES (NULL, ?, ?, ?, ?, ?, ?)", (username, enc_for_sender, enc_for_receiver,  datetime.now().strftime("%H:%M %d/%m/%y"), False, type))
         self.conn.commit()
         #set the unread message
@@ -340,9 +338,9 @@ class direct_db:
             is_read = i[5]
             message_type = i[6]
             if sender == username:
-                message = encpp.rsa().decrypt(private_key, enc_for_sender)
+                message = encpp.rsa().decrypt(private_key, enc_for_sender).decode()
             else:
-                message = encpp.rsa().decrypt(private_key, enc_for_receiver)
+                message = encpp.rsa().decrypt(private_key, enc_for_receiver).decode()
                 self.c.execute("UPDATE messages SET is_read=? WHERE message_id=?", (True, i[0]))
                 self.conn.commit()
             new_messages.append((sender, message, timestamp, is_read, message_type))
@@ -459,7 +457,7 @@ class user:
         totp = pyotp.TOTP(self.twofa_key)
         return totp.verify(code)
         
-    def send_message(self, target:str, message:bytes, message_type:str):
+    def send_message(self, target:str, message:str, message_type:str):
         """
         target: Username of the target
         message: Message to be sent
