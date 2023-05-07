@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 0.1.2 beta                  
+Version: 0.1.3 beta                  
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -199,8 +199,11 @@ class user_db:
         self.c.execute("SELECT * FROM users WHERE username=?", (contact,))
         if self.c.fetchone() is None:
             raise ValueError("Contact does not exist")
-        self.c.execute("INSERT INTO contacts VALUES (?, ?)", (username, contact))
-        self.conn.commit()
+        if contact in self.get_contacts(username):
+            pass
+        else:
+            self.c.execute("INSERT INTO contacts VALUES (?, ?)", (username, contact))
+            self.conn.commit()
     def remove_contact(self, username:str, contact:str) -> None:
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is None:
