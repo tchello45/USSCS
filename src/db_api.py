@@ -4,7 +4,7 @@ import qrcode
 import rsa
 """
 USSCS - Universal Server Side Chat System 
-Version: 0.1.2 beta                           
+Version: 1.0.0                        
 Author: Tilman Kurmayer                   
 License: only with permission from author 
                                                  
@@ -14,14 +14,16 @@ for the USSCS
                                           
 LAYER 2                                       
 """
-__version__ = '0.1.1 beta'
+__version__ = '1.0.0'
 #without login:
-def add_user(username:str, password:str, public_key:rsa.PublicKey, private_key:rsa.PrivateKey, privacy:int=0, twofa:bool=False):
-    """
-    Add a user to the database.
-    If two factor authentication is enabled, will return qrcode image.
-    """
-    return manage().add_user(username, password, public_key, private_key, privacy, twofa)
+class add_user:
+    @staticmethod
+    def add_user(username:str, password:str, public_key:rsa.PublicKey, private_key:rsa.PrivateKey, privacy:int=0, twofa:bool=False):
+        """
+        Add a user to the database.
+        If two factor authentication is enabled, will return qrcode image.
+        """
+        return manage().add_user(username, password, public_key, private_key, privacy, twofa)
 
 #with login:
 class user:

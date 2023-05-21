@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 0.1.3 beta                  
+Version: 1.0.0                  
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -191,13 +191,9 @@ class user_db:
         self.c.execute("SELECT contact FROM contacts WHERE username=?", (username,))
         return [i[0] for i in self.c.fetchall()]
     def add_contact(self, username:str, contact:str) -> None:
-        
-        self.c.execute("SELECT * FROM users WHERE username=?", (username,))
-        if self.c.fetchone() is None:
+        if not main_db().exists(username):
             raise ValueError("User does not exist")
-        #check if the contact exists
-        self.c.execute("SELECT * FROM users WHERE username=?", (contact,))
-        if self.c.fetchone() is None:
+        if not main_db().exists(contact):
             raise ValueError("Contact does not exist")
         if contact in self.get_contacts(username):
             pass
@@ -205,25 +201,24 @@ class user_db:
             self.c.execute("INSERT INTO contacts VALUES (?, ?)", (username, contact))
             self.conn.commit()
     def remove_contact(self, username:str, contact:str) -> None:
-        self.c.execute("SELECT * FROM users WHERE username=?", (username,))
-        if self.c.fetchone() is None:
+        if not main_db().exists(username):
             raise ValueError("User does not exist")
-        #check if the contact exists
-        self.c.execute("SELECT * FROM users WHERE username=?", (contact,))
-        if self.c.fetchone() is None:
+        if not main_db().exists(contact):
             raise ValueError("Contact does not exist")
         self.c.execute("DELETE FROM contacts WHERE username=? AND contact=?", (username, contact))
         self.conn.commit()
     def add_unread(self, username:str, sender:str):
-        self.c.execute("SELECT * FROM users WHERE username=?", (username,))
-        if self.c.fetchone() is None:
+        if not main_db().exists(username):
             raise ValueError("User does not exist")
+        if not main_db().exists(sender):
+            raise ValueError("sender does not exist")
         self.c.execute("INSERT INTO unread VALUES (?, ?)", (username, sender))
         self.conn.commit()
     def set_read(self, username:str, sender:str): 
-        self.c.execute("SELECT * FROM users WHERE username=?", (username,))
-        if self.c.fetchone() is None:
+        if not main_db().exists(username):
             raise ValueError("User does not exist")
+        if not main_db().exists(sender):
+            raise ValueError("sender does not exist")
         self.c.execute("DELETE FROM unread WHERE username=? AND sender=?", (username, sender))
         self.conn.commit()
     def get_unread(self, username:str) -> list:
@@ -528,7 +523,7 @@ class user:
         """
         Deletes the account
         """
-        self.user_db.delete_user(self.username, self.password)
+        self.user_db.delete_user(self.username)
         self.main_db.delete_user(self.username)
     def change_password(self, new_password:str):
         """
