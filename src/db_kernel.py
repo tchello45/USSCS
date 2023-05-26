@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 1.0.0                  
+Version: 1.0.1                  
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -329,6 +329,7 @@ class direct_db:
         private_key = manage().get_user_private_key(username, password)
         new_messages = []
         for i in messages:
+            id_ = i[0]
             sender = i[1]
             enc_for_sender = i[2]
             enc_for_receiver = i[3]
@@ -341,10 +342,40 @@ class direct_db:
                 message = encpp.rsa().decrypt(private_key, enc_for_receiver).decode()
                 self.c.execute("UPDATE messages SET is_read=? WHERE message_id=?", (True, i[0]))
                 self.conn.commit()
-            new_messages.append((sender, message, timestamp, is_read, message_type))
+            new_messages.append((sender, message, timestamp, is_read, message_type, id_))
         #set the messages as read
         user_db(main_db().get_user_server_id(target)).set_read(target, username)
         return new_messages
+    def get_unread_messages(self, username:str, password:str, target:str):
+        """
+        username: Username of the current user
+        password: Password of the current user
+        target: Username of the other user
+        return a list of messages: [message_id, sender, message, timestamp, is_read, message_type]
+        """
+        #check if the users exist
+        if not main_db().exists(target) or not main_db().exists(username):
+            raise ValueError("User does not exist")
+        #get the unread messages
+        messages = self.c.execute("SELECT * FROM messages WHERE is_read=? AND sender=?", (False, target)).fetchall()
+        #decrypt the messages
+        private_key = manage().get_user_private_key(username, password)
+        new_messages = []
+        for i in messages:
+            id_ = i[0]
+            sender = i[1]
+            enc_for_sender = i[2]
+            enc_for_receiver = i[3]
+            timestamp = i[4]
+            is_read = i[5]
+            message_type = i[6]
+            if sender == username:
+                message = encpp.rsa().decrypt(private_key, enc_for_sender).decode()
+            else:
+                message = encpp.rsa().decrypt(private_key, enc_for_receiver).decode()
+                self.c.execute("UPDATE messages SET is_read=? WHERE message_id=?", (True, i[0]))
+                self.conn.commit()
+            new_messages.append((sender, message, timestamp, is_read, message_type, id_))
 
 class manage:
     def __init__(self, main_db_path:str="main.db") -> None:
@@ -475,6 +506,15 @@ class user:
         """
         direct = direct_db(id_generators.direct_server_id(self.username, target))
         return direct.get_conversation(self.username, target, self.password, id)
+    def get_unread_messages_of(self, target:str) -> list:
+        """
+        target: Username of the target
+        Returns the unread messages of the target
+        return a list of messages: [message_id, sender, message, timestamp, is_read, message_type]
+        the message is in bytes format but its decrypted
+        """
+        direct = direct_db(id_generators.direct_server_id(self.username, target))
+        return direct.get_unread_messages(self.username, self.password, target)
     def set_privacy(self, privacy:int):
         """
         privacy: Privacy level

@@ -7,6 +7,7 @@
     send message
     get message
     get unread
+    get unread messages of specific target
 
     add contact
     remove contact

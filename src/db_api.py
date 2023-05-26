@@ -4,7 +4,7 @@ import qrcode
 import rsa
 """
 USSCS - Universal Server Side Chat System 
-Version: 1.0.0                        
+Version: 1.0.1                       
 Author: Tilman Kurmayer                   
 License: only with permission from author 
                                                  
@@ -14,7 +14,7 @@ for the USSCS
                                           
 LAYER 2                                       
 """
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 #without login:
 class add_user:
     @staticmethod
@@ -42,6 +42,11 @@ class user:
         id is the id of the last message you have.
         """
         return self._user.get_conversation(target, message_id)
+    def get_unread_messages(self, target:str):
+        """
+        Get all unread messages from a user.
+        """
+        return self._user.get_unread_messages_of(target)
     def get_users_with_unread_messages(self):
         """
         Get all users with unread messages.
