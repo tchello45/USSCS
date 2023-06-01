@@ -5,7 +5,7 @@ import qrcode
 import rsa
 """
 USSCS - Universal Server Side Chat System 
-Version: 1.0.2                       
+Version: 1.0.3                       
 Author: Tilman Kurmayer                   
 License: only with permission from author 
                                                  
@@ -15,7 +15,7 @@ for the USSCS
                                           
 LAYER 2                                       
 """
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 #without login:
 class add_user:
     @staticmethod
