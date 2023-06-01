@@ -1,10 +1,11 @@
 from db_kernel import manage
 from db_kernel import user as user_kernel
+from db_kernel import main_db
 import qrcode
 import rsa
 """
 USSCS - Universal Server Side Chat System 
-Version: 1.0.1                       
+Version: 1.0.2                       
 Author: Tilman Kurmayer                   
 License: only with permission from author 
                                                  
@@ -14,7 +15,7 @@ for the USSCS
                                           
 LAYER 2                                       
 """
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 #without login:
 class add_user:
     @staticmethod
@@ -24,6 +25,13 @@ class add_user:
         If two factor authentication is enabled, will return qrcode image.
         """
         return manage().add_user(username, password, public_key, private_key, privacy, twofa)
+class exists:
+    @staticmethod
+    def exists(username:str):
+        """
+        Check if user exists.
+        """
+        return main_db().exists(username)
 
 #with login:
 class user:

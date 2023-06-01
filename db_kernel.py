@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 1.0.1                  
+Version: 1.0.2                  
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                

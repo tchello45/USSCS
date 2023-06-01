@@ -1,9 +1,10 @@
 from encpp.encpp import *
 from db_api import add_user as usscs_add_user
 from db_api import user as usscs_user
+from db_api import exists as usscs_exists
 """
 USSCS - Universal Server Side Chat System 
-Version: 1.0.1                         
+Version: 1.0.2                         
 Author: Tilman Kurmayer                   
 License: only with permission from author 
 
@@ -37,8 +38,10 @@ The default user functions from usscs are:
 
 LAYER 3 and last LAYER
 """
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 class add_user(usscs_add_user):
+    pass
+class exists(usscs_exists):
     pass
 class user(usscs_user):
     pass

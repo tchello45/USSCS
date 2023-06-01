@@ -2,6 +2,7 @@
 
 # Manage (without login)
     add user
+    exists user
 
 # User (with login)
     send message
