@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 1.0.3                  
+Version: 1.0.4                  
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -376,6 +376,9 @@ class direct_db:
                 self.c.execute("UPDATE messages SET is_read=? WHERE message_id=?", (True, i[0]))
                 self.conn.commit()
             new_messages.append((sender, message, timestamp, is_read, message_type, id_))
+        #set the messages as read
+        user_db(main_db().get_user_server_id(target)).set_read(username, target)
+        return new_messages
 
 class manage:
     def __init__(self, main_db_path:str="main.db") -> None:
