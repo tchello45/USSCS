@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 1.1.0                  
+Version: 1.1.1                 
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -503,7 +503,7 @@ class user:
         privacy level 1: Only contacts can send messages
         """
         direct = direct_db(id_generators.direct_server_id(self.username, target))
-        direct.send_message(self.username, target, message, message_type)
+        return direct.send_message(self.username, target, message, message_type)
     def get_conversation(self, target:str, id:int=-1) -> list:
         """
         target: Username of the target
