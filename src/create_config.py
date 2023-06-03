@@ -1,9 +1,11 @@
 import json
 import os
 max_users = input("Enter the maximum number of users: ")
+db_folder = input("Enter the path to the database folder: ")
 max_users = int(max_users)
 config = {
-    "max_users": max_users}
+    "max_users": max_users,
+    "db_folder": db_folder}
 if os.path.exists("config.json"):
     print("Config file already exists")
     exit()

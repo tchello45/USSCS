@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 1.1.1                 
+Version: 1.1.2                 
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -24,11 +24,15 @@ if os.path.exists("config.json"):
     with open("config.json", "r") as f:
         config = json.load(f)
         max_users = config["max_users"]
+        db_folder = config["db_folder"]
     del config
     del f
 
 else:
     max_users = 9000
+    db_folder = "db/"
+    if not os.path.exists(db_folder):
+        os.mkdir(db_folder)
 """
 Username: min 3, no spaces, no special characters
 privacy: 0 for public, 1 only contacts everbody can see me
@@ -62,7 +66,7 @@ class id_generators:
 class main_db:
     def __init__(self, path:str="main.db") -> None:
         """Path: Path to the main database"""
-        self.path = path
+        self.path = db_folder + path
         self.conn = sqlite3.connect(path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT, server_id TEXT)")
@@ -119,7 +123,7 @@ class user_db:
         server_id: Id of the current user server
         """
         self.server_id = server_id
-        self.path = f"{server_id}.db"
+        self.path = f"{db_folder}{server_id}.db"
         self.conn = sqlite3.connect(self.path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT, public_key TEXT, private_key BLOB, password_hash TEXT, salt TEXT, privacy INTEGER, is_2fa_enabled BOOL, twofa_key TEXT)")
@@ -280,7 +284,7 @@ class direct_db:
         server_id: Id of the current direct server
         """
         self.server_id = server_id
-        self.path = f"{server_id}.db"
+        self.path = f"{db_folder}{server_id}.db"
         self.conn = sqlite3.connect(self.path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS messages (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, enc_for_sender BLOB, enc_for_receiver BLOB, timestamp TEXT, is_read BOOL, message_type TEXT)")
@@ -314,7 +318,7 @@ class direct_db:
         self.c.execute("SELECT message_id FROM messages WHERE enc_for_sender=? AND enc_for_receiver=? AND timestamp=?", (enc_for_sender, enc_for_receiver, time))
         return self.c.fetchone()[0]
 
-    def get_conversation(self, username:str, target:str, password:str, id:int=-1):
+    def get_conversation(self, username:str, target:str, password:str, _id:int=-1):
         """
         username: Username of the current user
         target: Username of the other user
@@ -328,7 +332,7 @@ class direct_db:
         if id == -1:
             self.c.execute("SELECT * FROM messages")
         else:
-            self.c.execute("SELECT * FROM messages WHERE  message_id > ?", (id))
+            self.c.execute("SELECT * FROM messages WHERE  message_id >= ?", (_id,))
         messages = self.c.fetchall()
         #decrypt the messages
         private_key = manage().get_user_private_key(username, password)
@@ -504,7 +508,7 @@ class user:
         """
         direct = direct_db(id_generators.direct_server_id(self.username, target))
         return direct.send_message(self.username, target, message, message_type)
-    def get_conversation(self, target:str, id:int=-1) -> list:
+    def get_conversation(self, target:str, _id:int=-1) -> list:
         """
         target: Username of the target
         id: Id of the message to start from if -1 it will return all the messages
@@ -513,7 +517,7 @@ class user:
         the message is in bytes format but its decrypted
         """
         direct = direct_db(id_generators.direct_server_id(self.username, target))
-        return direct.get_conversation(self.username, target, self.password, id)
+        return direct.get_conversation(self.username, target, self.password, _id)
     def get_unread_messages_of(self, target:str) -> list:
         """
         target: Username of the target
