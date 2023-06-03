@@ -5,7 +5,7 @@ import qrcode
 import rsa
 """
 USSCS - Universal Server Side Chat System 
-Version: 1.0.3                       
+Version: 1.1.0                       
 Author: Tilman Kurmayer                   
 License: only with permission from author 
                                                  
@@ -15,7 +15,7 @@ for the USSCS
                                           
 LAYER 2                                       
 """
-__version__ = '1.0.3'
+__version__ = '1.1.0'
 #without login:
 class add_user:
     @staticmethod
@@ -42,6 +42,7 @@ class user:
     def send_message(self, target:str, message:str, type:str='text'):
         """
         Send a message to a user.
+        And return the message id.
         """
         return self._user.send_message(target, message, type)
     def get_messages(self, target:str, message_id:int=-1):

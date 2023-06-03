@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 1.0.4                  
+Version: 1.1.0                  
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -212,8 +212,9 @@ class user_db:
             raise ValueError("User does not exist")
         if not main_db().exists(sender):
             raise ValueError("sender does not exist")
-        self.c.execute("INSERT INTO unread VALUES (?, ?)", (username, sender))
-        self.conn.commit()
+        if not self.c.execute("SELECT * FROM unread WHERE username=? AND sender=?", (username, sender)).fetchone() is None:
+            self.c.execute("INSERT INTO unread VALUES (?, ?)", (username, sender))
+            self.conn.commit()
     def set_read(self, username:str, sender:str): 
         if not main_db().exists(username):
             raise ValueError("User does not exist")
@@ -304,10 +305,14 @@ class direct_db:
         public_key = manage().get_user_public_key(username)
         enc_for_sender = encpp.rsa().encrypt(public_key, message.encode())
         enc_for_receiver = encpp.rsa().encrypt(manage().get_user_public_key(target), message.encode())
-        self.c.execute("INSERT INTO messages VALUES (NULL, ?, ?, ?, ?, ?, ?)", (username, enc_for_sender, enc_for_receiver,  datetime.now().strftime("%H:%M %d/%m/%y"), False, type))
+        time = datetime.now().strftime("%H:%M %d/%m/%y")
+        self.c.execute("INSERT INTO messages VALUES (NULL, ?, ?, ?, ?, ?, ?)", (username, enc_for_sender, enc_for_receiver,  time, False, type))
         self.conn.commit()
         #set the unread message
         user_db(main_db().get_user_server_id(target)).add_unread(target, username)
+        #get id of the message
+        self.c.execute("SELECT message_id FROM messages WHERE enc_for_sender=? AND enc_for_receiver=? AND timestamp=?", (enc_for_sender, enc_for_receiver, time))
+        return self.c.fetchone()[0]
 
     def get_conversation(self, username:str, target:str, password:str, id:int=-1):
         """
