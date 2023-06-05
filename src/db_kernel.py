@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 1.1.3                 
+Version: 1.1.4                 
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -353,7 +353,7 @@ class direct_db:
                 self.conn.commit()
             new_messages.append((sender, message, timestamp, is_read, message_type, id_))
         #set the messages as read
-        user_db(main_db().get_user_server_id(target)).set_read(username, target)
+        user_db(main_db().get_user_server_id(username)).set_read(username, target)
         return new_messages
     def get_unread_messages(self, username:str, password:str, target:str):
         """
