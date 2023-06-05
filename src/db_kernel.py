@@ -10,7 +10,7 @@ import json
 from encpp.encpp import *
 """
 USSCS - Universal Server Side Chat System
-Version: 1.1.2                 
+Version: 1.1.3                 
 Author: Tilman Kurmayer                  
 License: only with permission from author
                                                
@@ -216,7 +216,7 @@ class user_db:
             raise ValueError("User does not exist")
         if not main_db().exists(sender):
             raise ValueError("sender does not exist")
-        if not self.c.execute("SELECT * FROM unread WHERE username=? AND sender=?", (username, sender)).fetchone() is None:
+        if self.c.execute("SELECT * FROM unread WHERE username=? AND sender=?", (username, sender)).fetchone() == None:
             self.c.execute("INSERT INTO unread VALUES (?, ?)", (username, sender))
             self.conn.commit()
     def set_read(self, username:str, sender:str): 
