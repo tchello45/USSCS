@@ -49,6 +49,11 @@ class id_generators:
             if username[:index] == "" or user_db(username[:index]).get_user_count() >= max_users:
                 continue
             return username[:index]
+        for i in range(1, 1000000000000000):
+            if user_db((username + str(i))).get_user_count() >= max_users:
+                continue
+            return (username + str(i))
+        return ValueError("No free user_server_id found")
     @staticmethod
     def direct_server_id(username0:str, username1:str) -> str:
         """
