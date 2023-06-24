@@ -1,8 +1,8 @@
 import db_kernel
 from db_kernel import add_user
 from db_kernel import remove_user
-import rsa
-import secrets
+__version__ = "2.0.0"
+__author__ = "Tilman Kurmayer"
 
 class user:
     def __init__(self, username:str, password:str):
@@ -34,12 +34,3 @@ class user:
             raise Exception("Invalid privacy setting")
         self.user_obj.set_user_privacy(self.username, privacy)
     
-
-user_list = []
-for i in range(500):
-    random = secrets.token_hex(8)
-    pub, priv = rsa.newkeys(512)
-    add_user(random, random, pub, priv)
-    for u in user_list:
-        user(random, random).send_message(u, "Hello World from " + random)
-    user_list.append(random)

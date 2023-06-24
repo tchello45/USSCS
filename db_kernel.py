@@ -5,7 +5,6 @@ import sqlite3
 import secrets
 from datetime import datetime
 import json
-import shutil
 from encpp.encpp import *
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:
@@ -20,10 +19,8 @@ else:
     db_folder = "db/"
     if not os.path.exists(db_folder):
         os.mkdir(db_folder)
-"""
-Username: min 3, no spaces, no special characters
-privacy: 0 for public, 1 only contacts everbody can see me
-"""
+__version__ = "2.0.0"
+__author__ = "Tilman Kurmayer"
 class id_generators:
     @staticmethod
     def user_server_id(username:str) -> str:
@@ -286,6 +283,10 @@ class direct_db:
         return conversation
 
 def add_user(username:str, password:str, public_key:rsa.PublicKey, private_key:rsa.PrivateKey,  privacy:int=0):
+    invalid_chars = [" ", "!", "?", ".", ",", ":", ";", "'", '"', "(", ")", "[", "]", "{", "}", "/", "\\", "|", "<", ">", "+", "-", "*", "=", "~", "`", "@", "#", "$", "%", "^", "&"]
+    for i in invalid_chars:
+        if i in username:
+            raise ValueError("Invalid username")
     server_id = id_generators.user_server_id(username)
     if main_db().exists(username):
         raise ValueError("User already exists")
