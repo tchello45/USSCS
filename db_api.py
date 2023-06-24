@@ -11,6 +11,8 @@ class user:
         self.username = username
         self.password = password
         self.user_obj = db_kernel.user_db(db_kernel.main_db().get_user_server_id(username))
+        if not self.user_obj.auth(username, password):
+            raise Exception("Invalid password")
     def send_message(self, target:str, message:str):
         db_kernel.direct_db(self.username, target, self.password).send_message(message)
     def get_conversation(self, target:str):

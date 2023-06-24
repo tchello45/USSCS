@@ -19,8 +19,6 @@ else:
     db_folder = "db/"
     if not os.path.exists(db_folder):
         os.mkdir(db_folder)
-__version__ = "2.0.0"
-__author__ = "Tilman Kurmayer"
 class id_generators:
     @staticmethod
     def user_server_id(username:str) -> str:
@@ -191,7 +189,13 @@ class user_db:
             raise ValueError("Sender does not exist")
         self.c.execute("DELETE FROM unread WHERE username=? AND sender=?", (username, sender))
         self.conn.commit()
-
+    def auth(self, username:str, password:str) -> bool:
+        self.c.execute("SELECT * FROM users WHERE username=?", (username,))
+        user = self.c.fetchone()
+        if user is None:
+            raise ValueError("User does not exist")
+        password_hash = hashlib.sha3_512(password.encode() + user[4].encode()).hexdigest()
+        return password_hash == user[3]
 class direct_db:
     def __init__(self, username:str, target:str, password:str) -> None:
         self.password = password
