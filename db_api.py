@@ -1,7 +1,7 @@
 import db_kernel
 from db_kernel import add_user
 from db_kernel import remove_user
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 __author__ = "Tilman Kurmayer"
 
 class user:
@@ -15,8 +15,8 @@ class user:
             raise Exception("Invalid password")
     def send_message(self, target:str, message:str):
         db_kernel.direct_db(self.username, target, self.password).send_message(message)
-    def get_conversation(self, target:str):
-        return db_kernel.direct_db(self.username, target, self.password).get_conversation()
+    def get_conversation(self, target:str, _id=-1):
+        return db_kernel.direct_db(self.username, target, self.password).get_conversation(_id)
     def get_unread_messages(self, target:str):
         return db_kernel.direct_db(self.username, target, self.password).get_unread_messages()
     def get_unread_users(self):
