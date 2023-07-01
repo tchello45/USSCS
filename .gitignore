@@ -1,5 +1,4 @@
-/*.db
 /__pycache__/
 /config.json
-/*.png
 /db/
+/enc_db/

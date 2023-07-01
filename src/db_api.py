@@ -1,9 +1,9 @@
 import db_kernel
 from db_kernel import add_user
 from db_kernel import remove_user
-__version__ = "2.0.3"
+__name__ = "db_api"
+__version__ = "1.0.0"
 __author__ = "Tilman Kurmayer"
-
 class user:
     def __init__(self, username:str, password:str):
         if not db_kernel.main_db().exists(username):
@@ -35,4 +35,3 @@ class user:
         if privacy not in [0, 1]:
             raise Exception("Invalid privacy setting")
         self.user_obj.set_user_privacy(self.username, privacy)
-    
