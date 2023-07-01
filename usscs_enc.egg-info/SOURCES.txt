@@ -1,0 +1,7 @@
+README.md
+usscs_enc/setup.py
+usscs_enc.egg-info/PKG-INFO
+usscs_enc.egg-info/SOURCES.txt
+usscs_enc.egg-info/dependency_links.txt
+usscs_enc.egg-info/requires.txt
+usscs_enc.egg-info/top_level.txt
