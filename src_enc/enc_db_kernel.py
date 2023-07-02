@@ -6,7 +6,7 @@ import secrets
 from datetime import datetime
 import json
 __name__ = "enc_db_kernel"
-__version__ = "2.0.4"
+__version__ = "3.0.0"
 __author__ = "Tilman Kurmayer"
 from encpp.encpp import *
 if os.path.exists("config.json"):

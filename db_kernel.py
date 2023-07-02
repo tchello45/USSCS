@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 
 __name__ = "db_kernel"
-__version__ = "1.0.0"
+__version__ = "3.0.0"
 __author__ = "Tilman Kurmayer"
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:

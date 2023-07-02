@@ -2,7 +2,7 @@ import enc_db_kernel
 from enc_db_kernel import add_user
 from enc_db_kernel import remove_user
 __name__ = "enc_db_api"
-__version__ = "2.0.4"
+__version__ = "3.0.0"
 __author__ = "Tilman Kurmayer"
 
 class user:
