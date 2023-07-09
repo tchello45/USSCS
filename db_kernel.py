@@ -54,8 +54,8 @@ class id_generators:
         return username0 + "!" + username1
 
 class main_db:
-    def __init__(self) -> None:
-        self.path = db_folder + "main.db"
+    def __init__(self, path:str) -> None:
+        self.path = path + "main.db"
         self.conn = sqlite3.connect(self.path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT, server_id TEXT)")
@@ -84,11 +84,11 @@ class main_db:
         return self.c.fetchone() is not None
 
 class user_db:
-    def __init__(self, server_id:str) -> None:
+    def __init__(self, server_id:str, path:str) -> None:
         self.server_id = server_id
-        self.path = f"{db_folder}user_db/{server_id}.db"
-        if not os.path.exists(db_folder + "user_db/"):
-            os.mkdir(db_folder + "user_db/")
+        self.path = f"{path}user_db/{server_id}.db"
+        if not os.path.exists(path + "user_db/"):
+            os.mkdir(path + "user_db/")
         self.conn = sqlite3.connect(self.path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT, password_hash TEXT, salt TEXT, privacy INTEGER)")
@@ -188,7 +188,7 @@ class user_db:
         password_hash = hashlib.sha3_512(password.encode() + user[2].encode()).hexdigest()
         return password_hash == user[1]
 class direct_db:
-    def __init__(self, username:str, target:str, password:str) -> None:
+    def __init__(self, username:str, target:str, password:str, path:str) -> None:
         self.password = password
         self.server_id = id_generators.direct_server_id(username, target)
         self.username = username
@@ -197,9 +197,9 @@ class direct_db:
             raise ValueError("User does not exist")
         self.id_user = main_db().get_user_server_id(self.username)
         self.id_target = main_db().get_user_server_id(self.target)
-        self.path = f"{db_folder}direct_db/{self.server_id}.db"
-        if not os.path.exists(db_folder + "direct_db/"):
-            os.mkdir(db_folder + "direct_db/")
+        self.path = f"{path}direct_db/{self.server_id}.db"
+        if not os.path.exists(path + "direct_db/"):
+            os.mkdir(path + "direct_db/")
         self.conn = sqlite3.connect(self.path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS messages (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, message BLOB, timestamp TEXT, is_read BOOL, message_type TEXT)")
@@ -267,7 +267,7 @@ class direct_db:
         user_db(self.id_target).remove_unread(self.target, self.username)
         return conversation
 
-def add_user(username:str, password:str, privacy:int=0):
+def add_user(username:str, password:str, privacy:int=0, path:str="DATABASE/"):
     invalid_chars = [" ", "!", "?", ".", ",", ":", ";", "'", '"', "(", ")", "[", "]", "{", "}", "/", "\\", "|", "<", ">", "+", "-", "*", "=", "~", "`", "@", "#", "$", "%", "^", "&"]
     for i in invalid_chars:
         if i in username:
@@ -275,16 +275,16 @@ def add_user(username:str, password:str, privacy:int=0):
     server_id = id_generators.user_server_id(username)
     if main_db().exists(username):
         raise ValueError("User already exists")
-    main_db().add_user(username, server_id)
-    user_db(server_id).add_user(username, password, privacy)
-def remove_user(username:str):
+    main_db(path).add_user(username, server_id)
+    user_db(server_id, path).add_user(username, password, privacy)
+def remove_user(username:str, path:str):
     user_id = main_db().get_user_server_id(username)
-    main_db().remove_user(username)
-    user_db(user_id).remove_user(username)
-    if user_db(user_id).get_user_count() == 0:
-        os.remove(db_folder + "user_db/" + user_id + ".db")
+    main_db(path).remove_user(username)
+    user_db(user_id, path).remove_user(username)
+    if user_db(user_id, path).get_user_count() == 0:
+        os.remove(path + "user_db/" + user_id + ".db")
     import glob
-    for i in glob.glob(db_folder + "direct_db/*.db"):
+    for i in glob.glob(path + "direct_db/*.db"):
         if i.split("/")[-1].split(".")[0].split("!")[0] == username or i.split("/")[-1].split(".")[0].split("!")[1] == username:
             os.remove(i)
     
