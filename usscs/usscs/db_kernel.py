@@ -6,38 +6,34 @@ from datetime import datetime
 import json
 
 __name__ = "db_kernel"
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 __author__ = "Tilman Kurmayer"
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:
         config = json.load(f)
         max_users = config["max_users"]
-        db_folder = config["db_folder"]
     del config
     del f
 
 else:
     max_users = 9000
-    db_folder = "db/"
-    if not os.path.exists(db_folder):
-        os.mkdir(db_folder)
 """
 Username: min 3, no spaces, no special characters
 privacy: 0 for public, 1 only contacts everbody can see me
 """
 class id_generators:
     @staticmethod
-    def user_server_id(username:str) -> str:
+    def user_server_id(username:str, path:str) -> str:
         """
         username: Username of the user
         Generates a user_server_id for a username
         """
         for index in range(len(username)):
-            if username[:index] == "" or user_db(username[:index]).get_user_count() >= max_users:
+            if username[:index] == "" or user_db(username[:index], path).get_user_count() >= max_users:
                 continue
             return username[:index]
         for i in range(1, 1000000000000000):
-            if user_db((username + str(i))).get_user_count() >= max_users:
+            if user_db((username + str(i)), path).get_user_count() >= max_users:
                 continue
             return (username + str(i))
         return ValueError("No free user_server_id found")
@@ -54,8 +50,8 @@ class id_generators:
         return username0 + "!" + username1
 
 class main_db:
-    def __init__(self) -> None:
-        self.path = db_folder + "main.db"
+    def __init__(self, path:str) -> None:
+        self.path = path + "main.db"
         self.conn = sqlite3.connect(self.path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT, server_id TEXT)")
@@ -84,12 +80,13 @@ class main_db:
         return self.c.fetchone() is not None
 
 class user_db:
-    def __init__(self, server_id:str) -> None:
+    def __init__(self, server_id:str, path:str) -> None:
         self.server_id = server_id
-        self.path = f"{db_folder}user_db/{server_id}.db"
-        if not os.path.exists(db_folder + "user_db/"):
-            os.mkdir(db_folder + "user_db/")
-        self.conn = sqlite3.connect(self.path)
+        self.sql_path = f"{path}user_db/{server_id}.db"
+        self.path = path
+        if not os.path.exists(path + "user_db/"):
+            os.mkdir(path + "user_db/")
+        self.conn = sqlite3.connect(self.sql_path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT, password_hash TEXT, salt TEXT, privacy INTEGER)")
         self.c.execute("CREATE TABLE IF NOT EXISTS contacts (username TEXT, contact TEXT)")
@@ -115,6 +112,7 @@ class user_db:
     def get_user_privacy(self, username:str) -> int:
         self.c.execute("SELECT privacy FROM users WHERE username=?", (username,))
         user = self.c.fetchone()
+        print(user)
         if user is None:
             raise ValueError("User does not exist")
         return user[0]
@@ -138,7 +136,7 @@ class user_db:
         user = self.c.fetchone()
         if user is None:
             raise ValueError("User does not exist")
-        if main_db().exists(contact) is False:
+        if main_db(self.path).exists(contact) is False:
             raise ValueError("Contact does not exist")
         self.c.execute("INSERT INTO contacts VALUES (?, ?)", (username, contact))
         self.conn.commit()
@@ -147,7 +145,7 @@ class user_db:
         user = self.c.fetchone()
         if user is None:
             raise ValueError("User does not exist")
-        if main_db().exists(contact) is False:
+        if main_db(self.path).exists(contact) is False:
             raise ValueError("Contact does not exist")
         self.c.execute("DELETE FROM contacts WHERE username=? AND contact=?", (username, contact))
         self.conn.commit()
@@ -167,7 +165,7 @@ class user_db:
         user = self.c.fetchone()
         if user is None:
             raise ValueError("User does not exist")
-        if main_db().exists(sender) is False:
+        if main_db(self.path).exists(sender) is False:
             raise ValueError("Sender does not exist")
         self.c.execute("INSERT INTO unread VALUES (?, ?)", (username, sender))
         self.conn.commit()
@@ -176,7 +174,7 @@ class user_db:
         user = self.c.fetchone()
         if user is None:
             raise ValueError("User does not exist")
-        if main_db().exists(sender) is False:
+        if main_db(self.path).exists(sender) is False:
             raise ValueError("Sender does not exist")
         self.c.execute("DELETE FROM unread WHERE username=? AND sender=?", (username, sender))
         self.conn.commit()
@@ -188,30 +186,31 @@ class user_db:
         password_hash = hashlib.sha3_512(password.encode() + user[2].encode()).hexdigest()
         return password_hash == user[1]
 class direct_db:
-    def __init__(self, username:str, target:str, password:str) -> None:
+    def __init__(self, username:str, target:str, password:str, path:str) -> None:
         self.password = password
         self.server_id = id_generators.direct_server_id(username, target)
         self.username = username
         self.target = target
-        if not main_db().exists(self.target) or not main_db().exists(self.username):
+        if not main_db(path).exists(self.target) or not main_db(path).exists(self.username):
             raise ValueError("User does not exist")
-        self.id_user = main_db().get_user_server_id(self.username)
-        self.id_target = main_db().get_user_server_id(self.target)
-        self.path = f"{db_folder}direct_db/{self.server_id}.db"
-        if not os.path.exists(db_folder + "direct_db/"):
-            os.mkdir(db_folder + "direct_db/")
-        self.conn = sqlite3.connect(self.path)
+        self.id_user = main_db(path).get_user_server_id(self.username)
+        self.id_target = main_db(path).get_user_server_id(self.target)
+        self.sql_path = f"{path}direct_db/{self.server_id}.db"
+        self.path = path
+        if not os.path.exists(path + "direct_db/"):
+            os.mkdir(path + "direct_db/")
+        self.conn = sqlite3.connect(self.sql_path)
         self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS messages (message_id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, message BLOB, timestamp TEXT, is_read BOOL, message_type TEXT)")
         self.conn.commit()
     def send_message(self, message:str, type:str="text"):      
-        contact_privacy = user_db(self.id_target).get_user_privacy(self.target)
-        if contact_privacy != 0 and user_db(self.id_target).is_contact(self.target, self.username) is False:
+        contact_privacy = user_db(self.id_target, self.path).get_user_privacy(self.target)
+        if contact_privacy != 0 and user_db(self.id_target, self.path).is_contact(self.target, self.username) is False:
                 raise ValueError("Privacy error")
         time = datetime.now().strftime("%H:%M %d/%m/%y")
         self.c.execute("INSERT INTO messages VALUES (NULL, ?, ?, ?, ?, ?)", (self.username, message.encode(), time, False, type))
         self.conn.commit()
-        user_db(self.id_target).add_unread(self.target, self.username)
+        user_db(self.id_target, self.path).add_unread(self.target, self.username)
         return self.c.lastrowid
     def get_conversation(self, _id:int=-1):
         self.c.execute("SELECT * FROM messages WHERE  message_id >= ?", (_id,))
@@ -238,7 +237,7 @@ class direct_db:
             conversation.append(mes_dict)
         self.c.execute("UPDATE messages SET is_read=? WHERE sender=? AND is_read=?", (True, self.target, False))
         self.conn.commit()
-        user_db(self.id_target).remove_unread(self.target, self.username)
+        user_db(self.id_target, self.path).remove_unread(self.target, self.username)
         return conversation
     def get_unread_messages(self):
         messages = self.c.execute("SELECT * FROM messages WHERE sender=? AND is_read=?", (self.target, False)).fetchall()
@@ -264,27 +263,27 @@ class direct_db:
             conversation.append(mes_dict)
         self.c.execute("UPDATE messages SET is_read=? WHERE sender=? AND is_read=?", (True, self.target, False))
         self.conn.commit()
-        user_db(self.id_target).remove_unread(self.target, self.username)
+        user_db(self.id_target, self.path).remove_unread(self.target, self.username)
         return conversation
 
-def add_user(username:str, password:str, privacy:int=0):
+def add_user(username:str, password:str, privacy:int=0, path:str="DATABASE/"):
     invalid_chars = [" ", "!", "?", ".", ",", ":", ";", "'", '"', "(", ")", "[", "]", "{", "}", "/", "\\", "|", "<", ">", "+", "-", "*", "=", "~", "`", "@", "#", "$", "%", "^", "&"]
     for i in invalid_chars:
         if i in username:
             raise ValueError("Invalid username")
-    server_id = id_generators.user_server_id(username)
-    if main_db().exists(username):
+    server_id = id_generators.user_server_id(username, path)
+    if main_db(path).exists(username):
         raise ValueError("User already exists")
-    main_db().add_user(username, server_id)
-    user_db(server_id).add_user(username, password, privacy)
-def remove_user(username:str):
-    user_id = main_db().get_user_server_id(username)
-    main_db().remove_user(username)
-    user_db(user_id).remove_user(username)
-    if user_db(user_id).get_user_count() == 0:
-        os.remove(db_folder + "user_db/" + user_id + ".db")
+    main_db(path).add_user(username, server_id)
+    user_db(server_id, path).add_user(username, password, privacy)
+def remove_user(username:str, path:str):
+    user_id = main_db(path).get_user_server_id(username)
+    main_db(path).remove_user(username)
+    user_db(user_id, path).remove_user(username)
+    if user_db(user_id, path).get_user_count() == 0:
+        os.remove(path + "user_db/" + user_id + ".db")
     import glob
-    for i in glob.glob(db_folder + "direct_db/*.db"):
+    for i in glob.glob(path + "direct_db/*.db"):
         if i.split("/")[-1].split(".")[0].split("!")[0] == username or i.split("/")[-1].split(".")[0].split("!")[1] == username:
             os.remove(i)
     
