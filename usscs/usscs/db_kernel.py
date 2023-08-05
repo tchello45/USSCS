@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 
 __name__ = "db_kernel"
-__version__ = "3.0.2"
+__version__ = "3.0.3"
 __author__ = "Tilman Kurmayer"
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:
@@ -267,7 +267,7 @@ class direct_db:
         user_db(self.id_target, self.path).remove_unread(self.target, self.username)
         return conversation
 
-def add_user(username:str, password:str, privacy:int=0, path:str="DATABASE/"):
+def add_user(username:str, password:str, privacy:int=0, path:str="DATABASE/", max:int=100):
     invalid_chars = [" ", "!", "?", ".", ",", ":", ";", "'", '"', "(", ")", "[", "]", "{", "}", "/", "\\", "|", "<", ">", "+", "-", "*", "=", "~", "`", "@", "#", "$", "%", "^", "&"]
     for i in invalid_chars:
         if i in username:
@@ -275,7 +275,7 @@ def add_user(username:str, password:str, privacy:int=0, path:str="DATABASE/"):
     server_id = id_generators.user_server_id(username, path)
     if main_db(path).exists(username):
         raise ValueError("User already exists")
-    main_db(path).add_user(username, server_id)
+    main_db(path).add_user(username, server_id, max)
     user_db(server_id, path).add_user(username, password, privacy)
 def remove_user(username:str, path:str):
     user_id = main_db(path).get_user_server_id(username)
