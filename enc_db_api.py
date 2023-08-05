@@ -1,6 +1,6 @@
-import enc_db_kernel
-from enc_db_kernel import add_user
-from enc_db_kernel import remove_user
+from .usscs_enc.usscs_enc import enc_db_kernel
+from .enc_db_kernel import add_user
+from .enc_db_kernel import remove_user
 __name__ = "enc_db_api"
 __version__ = "3.0.2"
 __author__ = "Tilman Kurmayer"
