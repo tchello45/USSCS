@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 
 __name__ = "db_kernel"
-__version__ = "3.0.1"
+__version__ = "3.0.2"
 __author__ = "Tilman Kurmayer"
 if os.path.exists("config.json"):
     with open("config.json", "r") as f:
@@ -57,7 +57,9 @@ class main_db:
         self.c.execute("CREATE TABLE IF NOT EXISTS users (username TEXT, server_id TEXT)")
         self.conn.commit()
 
-    def add_user(self, username, server_id) -> None:
+    def add_user(self, username, server_id, max:int) -> None:
+        if len(self.get_all_users()) >= max:
+            raise ValueError("Max user count reached")
         self.c.execute("SELECT * FROM users WHERE username=?", (username,))
         if self.c.fetchone() is not None:
             raise ValueError("User already exists")
@@ -112,7 +114,6 @@ class user_db:
     def get_user_privacy(self, username:str) -> int:
         self.c.execute("SELECT privacy FROM users WHERE username=?", (username,))
         user = self.c.fetchone()
-        print(user)
         if user is None:
             raise ValueError("User does not exist")
         return user[0]

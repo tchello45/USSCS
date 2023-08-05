@@ -1,5 +1,5 @@
 from setuptools import setup
-VERSION = '3.0.1'
+VERSION = '3.0.2'
 DESCRIPTION = 'USSCS: Universal Server Side Chat System'
 LONG_DESCRIPTION = 'A package that allows you to create a chat system!'
 setup(

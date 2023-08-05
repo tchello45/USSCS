@@ -2,7 +2,7 @@ from . import db_kernel
 from .db_kernel import add_user
 from .db_kernel import remove_user
 __name__ = "db_api"
-__version__ = "3.0.1"
+__version__ = "3.0.2"
 __author__ = "Tilman Kurmayer"
 class user:
     def __init__(self, username:str, password:str, path:str):
